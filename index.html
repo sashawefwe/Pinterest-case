@@ -118,6 +118,36 @@
         </div>
       </div>
       </div>
+      <div class="pin-save-mobile">
+        <div class="pin-save-mobile__viewport">
+          <div class="pin-save-mobile__track">
+            <div class="pin-save-mobile__slide">
+              <video muted loop playsinline preload="metadata">
+                <source src="assets/cases/pinterest/videos/8.webm" type="video/webm">
+              </video>
+            </div>
+            <div class="pin-save-mobile__slide">
+              <video muted loop playsinline preload="metadata">
+                <source src="assets/cases/pinterest/videos/7.webm" type="video/webm">
+              </video>
+            </div>
+          </div>
+          <div class="pin-save-mobile__controls">
+            <button class="video-progress" type="button" aria-label="Поставить видео на паузу" data-state="playing">
+              <svg class="video-progress__ring" width="44" height="44" viewBox="0 0 44 44" fill="none" aria-hidden="true">
+                <circle cx="22" cy="22" r="21" stroke="#DDDDDD" stroke-width="2"/>
+                <circle class="video-progress__arc" cx="22" cy="22" r="21" stroke="#969696" stroke-width="2" stroke-linecap="round" pathLength="1" stroke-dasharray="1" stroke-dashoffset="1" transform="rotate(-90 22 22)"/>
+              </svg>
+              <img class="video-progress__icon" src="assets/icons/video/pause.svg" width="20" height="20" alt="" aria-hidden="true">
+            </button>
+            <button class="video-replay" type="button" aria-label="Воспроизвести видео заново">Replay</button>
+          </div>
+        </div>
+        <div class="pin-save-mobile__descriptions" aria-live="polite">
+          <p class="is-active" data-slide="0">Хочется просто листать ленту и сохранять то, что цепляет. Но каждый раз приходится выбирать доску или создавать новую</p>
+          <p data-slide="1" aria-hidden="true">Теперь пин можно сохранить одним нажатием, даже не открывая его. Выбрать доску можно позже</p>
+        </div>
+      </div>
       <div class="video-segment" role="group" aria-label="Сравнение до и после">
         <button type="button" data-slide="0" aria-pressed="true">До</button>
         <button type="button" data-slide="1" aria-pressed="false">После</button>
@@ -125,6 +155,6 @@
     </section>
   </main>
   <div class="summary-backdrop" aria-hidden="true"></div>
-  <script src="script.js"></script>
+  <script src="script.js?v=3"></script>
 </body>
 </html>

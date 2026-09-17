@@ -32,6 +32,7 @@ button { font:inherit; }
 .pin-save-comparison--after .iphone-demo { transform:translateX(clamp(70px,7vw,112px)); }
 .pin-save-video-test { display:flex; flex-direction:column; align-items:center; justify-content:flex-start; gap:20px; width:100%; min-width:0; margin-top:0; border-radius:24px; background:#FFFFFF; overflow:hidden; text-align:left; }
 .pin-save-videos { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:16px; width:100%; max-width:750px; margin-top:48px; }
+.pin-save-mobile { display:none; }
 .video-segment { display:none; }
 .pin-save-video-test__text { width:100%; min-width:0; flex:0 0 auto; padding:28px 32px 0; font-family:"SF Pro Display", "SF Pro", -apple-system, BlinkMacSystemFont, sans-serif; }
 .pin-save-video-test__text h3 { display:table; width:max-content; margin:0 auto; padding:5px 14px; border-radius:999px; background:#F2F2F7; color:#1C1C1E; font-size:clamp(15px,1.1vw,17px); line-height:1.4; font-weight:400; letter-spacing:0; }
@@ -112,20 +113,29 @@ body.summary-overlay-open .summary-backdrop { opacity:1; visibility:visible; poi
   .case-cover { order:1; width:100%; height:clamp(360px,64svh,560px); }
   .case-section { padding:clamp(240px,35vh,360px) 0 clamp(64px,10vh,100px); }
   .case-section h2 { font-size:clamp(38px,7.4vw,54px); }
-  #saving-pin-title { font-size:clamp(32.49px,6.3175vw,46.0275px); }
+  #saving-pin-title { font-size:clamp(20px,6vw,46px); white-space:nowrap; }
   .pin-save-demo { margin-top:32px; padding:clamp(24px,6vw,40px); }
   .pin-save-demo { grid-template-columns:1fr; gap:48px; }
   .pin-save-comparison { grid-template-columns:1fr; justify-items:center; }
   .pin-save-comparison__text { width:min(100%,449px); padding-top:0; }
   .pin-save-comparison--after .pin-save-comparison__text { width:min(100%,449px); transform:none; }
   .pin-save-comparison--after .iphone-demo { transform:none; }
-  .pin-save-videos { display:flex; gap:0; overflow-x:auto; scroll-snap-type:x mandatory; overscroll-behavior-x:contain; scrollbar-width:none; }
-  .pin-save-videos::-webkit-scrollbar { display:none; }
-  .pin-save-video-test { flex:0 0 100%; flex-direction:column; align-items:center; gap:0; scroll-snap-align:start; scroll-snap-stop:always; }
-  .pin-save-video-test__media { order:0; }
-  .pin-save-video-test__text { order:1; width:100%; flex-basis:auto; padding:24px clamp(20px,5vw,32px); }
-  .pin-save-video-test__text h3 { display:none; }
-  .pin-save-video-test__text p { max-width:none; margin:0; }
+  .pin-save-videos { display:none; }
+  .pin-save-mobile { display:block; width:100%; max-width:750px; margin-top:48px; overflow:hidden; border-radius:24px; background:#FFFFFF; text-align:left; }
+  .pin-save-mobile__viewport { position:relative; width:100%; overflow:hidden; }
+  .pin-save-mobile__track { display:flex; width:100%; overflow-x:auto; scroll-snap-type:x mandatory; overscroll-behavior-x:contain; scrollbar-width:none; }
+  .pin-save-mobile__track::-webkit-scrollbar { display:none; }
+  .pin-save-mobile__slide { flex:0 0 100%; min-width:0; scroll-snap-align:start; scroll-snap-stop:always; }
+  .pin-save-mobile__slide video { display:block; width:100%; height:auto; }
+  .pin-save-mobile__controls { position:absolute; z-index:2; left:clamp(16px,5vw,28px); right:clamp(16px,5vw,28px); bottom:clamp(16px,5vw,28px); display:flex; align-items:center; justify-content:space-between; gap:12px; pointer-events:none; }
+  .pin-save-mobile__controls button { pointer-events:auto; }
+  .pin-save-mobile__controls .video-progress { margin-top:0; }
+  .pin-save-mobile__controls .video-replay { width:auto; height:44px; padding:0; border:0; background:transparent; color:#969696; font-family:"SF Pro Display", "SF Pro", -apple-system, BlinkMacSystemFont, sans-serif; font-size:15px; cursor:pointer; }
+  .pin-save-mobile__descriptions { display:grid; padding:24px clamp(20px,5vw,32px); font-family:"SF Pro Display", "SF Pro", -apple-system, BlinkMacSystemFont, sans-serif; }
+  .pin-save-mobile__descriptions p { grid-area:1/1; align-self:start; margin:0; font-size:clamp(17px,1.2vw,18px); line-height:1.35; font-weight:500; opacity:0; visibility:hidden; transition:opacity .18s ease,visibility 0s linear .18s; }
+  .pin-save-mobile__descriptions p:first-child { color:#8E8E93; }
+  .pin-save-mobile__descriptions p:last-child { color:#1C1C1E; }
+  .pin-save-mobile__descriptions p.is-active { opacity:1; visibility:visible; transition:opacity .18s ease; }
   .video-segment { display:flex; width:min(100%,320px); gap:4px; margin-top:20px; padding:4px; border-radius:12px; background:#E8E8ED; }
   .video-segment button { flex:1; min-height:40px; padding:8px 16px; border:0; border-radius:9px; background:transparent; color:#65656B; font-family:"SF Pro Display", "SF Pro", -apple-system, BlinkMacSystemFont, sans-serif; font-size:16px; cursor:pointer; transition:background .2s ease,color .2s ease,box-shadow .2s ease; }
   .video-segment button[aria-pressed="true"] { background:#FFFFFF; color:#1C1C1E; box-shadow:0 1px 4px #00000012; }
@@ -148,7 +158,7 @@ body.summary-overlay-open .summary-backdrop { opacity:1; visibility:visible; poi
   .summary[data-state="compact"] { right:auto; width:138px; height:60px; }
   .summary[data-state="overlay"] { right:var(--page-gutter); width:calc(100vw - 2 * var(--page-gutter)); height:calc(100svh - 2 * var(--page-gutter)); }
 }
-@media (prefers-reduced-motion:reduce) { html{scroll-behavior:auto}.summary,.summary__content,.summary__widget,.case-section h2{transition-duration:.01ms!important;transition-delay:0s!important;} }
+@media (prefers-reduced-motion:reduce) { html{scroll-behavior:auto}.summary,.summary__content,.summary__widget,.case-section h2,.pin-save-mobile__descriptions p{transition-duration:.01ms!important;transition-delay:0s!important;} }
 
 @media (max-width:600px) {
   .summary__task-columns { grid-template-columns:1fr; gap:24px; }

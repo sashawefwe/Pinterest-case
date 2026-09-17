@@ -12,6 +12,21 @@ const caseSectionTitleReveal = caseSection.querySelector('.case-section__title-r
 const iphoneDemos = document.querySelectorAll('.iphone-demo');
 let manualExpanded = false;
 
+function syncSummarySlotHeight() {
+  if (!mobileLayout.matches) {
+    summarySlot.style.removeProperty('min-height');
+    return;
+  }
+
+  if (summary.dataset.state === 'expanded') {
+    // offsetHeight is not affected by the FLIP transform used during morphing.
+    summarySlot.style.minHeight = `${summary.offsetHeight}px`;
+  }
+}
+
+const summaryResizeObserver = new ResizeObserver(syncSummarySlotHeight);
+summaryResizeObserver.observe(summary);
+
 function updateIphoneScale(iphoneDemo) {
   iphoneDemo.style.setProperty('--iphone-scale', String(iphoneDemo.clientWidth / 449));
 }
@@ -100,9 +115,14 @@ function applyState(state) {
   collapseButton.setAttribute('aria-hidden', String(!overlay));
   widgetButton.tabIndex = compact ? 0 : -1;
   widgetButton.setAttribute('aria-hidden', String(!compact));
+  if (state === 'expanded') requestAnimationFrame(syncSummarySlotHeight);
 }
 
 function setState(state, morph = false) {
+  if (summary.dataset.state === 'expanded' && state !== 'expanded') {
+    syncSummarySlotHeight();
+  }
+
   if (!morph || summary.dataset.state === state || window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
     applyState(state);
     return;
@@ -182,29 +202,79 @@ document.addEventListener('keydown', (event) => {
   resultTooltipButton.blur();
 });
 
-const videoSlider = document.querySelector('.pin-save-videos');
-const videoSlides = [...videoSlider.querySelectorAll('.pin-save-video-test')];
+const desktopComparisonVideos = [...document.querySelectorAll('.pin-save-video-test video')];
+const mobileVideoTrack = document.querySelector('.pin-save-mobile__track');
+const mobileVideoSlides = [...document.querySelectorAll('.pin-save-mobile__slide')];
+const mobileVideos = mobileVideoSlides.map((slide) => slide.querySelector('video'));
+const mobileDescriptions = [...document.querySelectorAll('.pin-save-mobile__descriptions p')];
+const mobileVideoProgress = document.querySelector('.pin-save-mobile__controls .video-progress');
+const mobileVideoProgressArc = mobileVideoProgress.querySelector('.video-progress__arc');
+const mobileVideoProgressIcon = mobileVideoProgress.querySelector('.video-progress__icon');
+const mobileVideoReplay = document.querySelector('.pin-save-mobile__controls .video-replay');
 const videoSegmentButtons = [...document.querySelectorAll('.video-segment button')];
 let activeVideoSlide = 0;
+let mobileProgressFrame;
+let descriptionTimer;
+let mobileScrollFrame;
+let requestedVideoSlide = null;
 
-function updateVideoSegment() {
-  if (mobileLayout.matches && videoSlider.clientWidth > 0) {
-    activeVideoSlide = Math.max(0, Math.min(videoSlides.length - 1,
-      Math.round(videoSlider.scrollLeft / videoSlider.clientWidth)));
-  }
+function updateMobileVideoControl() {
+  const video = mobileVideos[activeVideoSlide];
+  const paused = video.paused;
+  mobileVideoProgress.dataset.state = paused ? 'paused' : 'playing';
+  mobileVideoProgressIcon.src = paused ? 'assets/icons/video/play.svg' : 'assets/icons/video/pause.svg';
+  mobileVideoProgress.setAttribute('aria-label', paused ? 'Продолжить видео' : 'Поставить видео на паузу');
+}
+
+function updateMobileVideoProgress() {
+  const video = mobileVideos[activeVideoSlide];
+  const progress = Number.isFinite(video.duration) && video.duration > 0 ? video.currentTime / video.duration : 0;
+  mobileVideoProgressArc.setAttribute('stroke-dashoffset', String(1 - Math.min(1, Math.max(0, progress))));
+  if (!video.paused && mobileLayout.matches) mobileProgressFrame = requestAnimationFrame(updateMobileVideoProgress);
+}
+
+function showMobileDescription(index) {
+  clearTimeout(descriptionTimer);
+  mobileDescriptions.forEach((description) => {
+    description.classList.remove('is-active');
+    description.setAttribute('aria-hidden', 'true');
+  });
+
+  const reveal = () => {
+    mobileDescriptions[index].classList.add('is-active');
+    mobileDescriptions[index].setAttribute('aria-hidden', 'false');
+  };
+  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) reveal();
+  else descriptionTimer = setTimeout(reveal, 180);
+}
+
+function setActiveMobileVideo(index, playVideo = true, forcePlay = false) {
+  const nextIndex = Math.max(0, Math.min(mobileVideos.length - 1, index));
+  const changed = nextIndex !== activeVideoSlide;
+  activeVideoSlide = nextIndex;
+
+  mobileVideos.forEach((video, videoIndex) => {
+    if (videoIndex !== activeVideoSlide) video.pause();
+  });
   videoSegmentButtons.forEach((button, index) => {
     button.setAttribute('aria-pressed', String(index === activeVideoSlide));
   });
-  videoSlides.forEach((slide, index) => {
-    slide.inert = mobileLayout.matches && index !== activeVideoSlide;
-  });
+  if (changed) showMobileDescription(activeVideoSlide);
+  if (playVideo && mobileLayout.matches && (changed || forcePlay)) {
+    mobileVideos[activeVideoSlide].play().catch(() => {});
+  }
+  cancelAnimationFrame(mobileProgressFrame);
+  updateMobileVideoControl();
+  updateMobileVideoProgress();
 }
 
 function selectVideoSlide(index) {
   if (!mobileLayout.matches) return;
-  videoSlider.scrollTo({
-    left:index * videoSlider.clientWidth,
-    behavior:window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth'
+  setActiveMobileVideo(index);
+  requestedVideoSlide = index;
+  mobileVideoTrack.scrollTo({
+    left:index * mobileVideoTrack.clientWidth,
+    behavior:window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth'
   });
 }
 
@@ -218,13 +288,71 @@ videoSegmentButtons.forEach((button, index) => {
     selectVideoSlide(next);
   });
 });
-videoSlider.addEventListener('scroll', updateVideoSegment, { passive:true });
+
+mobileVideoProgress.addEventListener('click', () => {
+  const video = mobileVideos[activeVideoSlide];
+  if (video.paused) video.play().catch(() => {});
+  else video.pause();
+});
+mobileVideoReplay.addEventListener('click', () => {
+  const video = mobileVideos[activeVideoSlide];
+  video.currentTime = 0;
+  video.play().catch(() => {});
+});
+mobileVideos.forEach((video, index) => {
+  video.addEventListener('play', () => {
+    if (index !== activeVideoSlide || !mobileLayout.matches) {
+      video.pause();
+      return;
+    }
+    cancelAnimationFrame(mobileProgressFrame);
+    updateMobileVideoControl();
+    updateMobileVideoProgress();
+  });
+  video.addEventListener('pause', () => {
+    if (index !== activeVideoSlide) return;
+    cancelAnimationFrame(mobileProgressFrame);
+    updateMobileVideoControl();
+    updateMobileVideoProgress();
+  });
+  video.addEventListener('loadedmetadata', () => {
+    if (index === activeVideoSlide) updateMobileVideoProgress();
+  });
+});
+mobileVideoTrack.addEventListener('scroll', () => {
+  cancelAnimationFrame(mobileScrollFrame);
+  mobileScrollFrame = requestAnimationFrame(() => {
+    if (!mobileLayout.matches || mobileVideoTrack.clientWidth === 0) return;
+    if (requestedVideoSlide !== null) {
+      const requestedLeft = requestedVideoSlide * mobileVideoTrack.clientWidth;
+      if (Math.abs(mobileVideoTrack.scrollLeft - requestedLeft) < 1) requestedVideoSlide = null;
+      return;
+    }
+    setActiveMobileVideo(Math.round(mobileVideoTrack.scrollLeft / mobileVideoTrack.clientWidth));
+  });
+}, { passive:true });
+mobileVideoTrack.addEventListener('pointerdown', () => {
+  requestedVideoSlide = null;
+}, { passive:true });
+
+function updateComparisonLayout() {
+  if (mobileLayout.matches) {
+    desktopComparisonVideos.forEach((video) => video.pause());
+    mobileVideoTrack.scrollTo({ left:activeVideoSlide * mobileVideoTrack.clientWidth, behavior:'auto' });
+    setActiveMobileVideo(activeVideoSlide, true, true);
+    return;
+  }
+  cancelAnimationFrame(mobileProgressFrame);
+  mobileVideos.forEach((video) => video.pause());
+  desktopComparisonVideos.forEach((video) => video.play().catch(() => {}));
+}
+
 new ResizeObserver(() => {
-  videoSlider.scrollTo({ left:mobileLayout.matches ? activeVideoSlide * videoSlider.clientWidth : 0, behavior:'instant' });
-  updateVideoSegment();
-}).observe(videoSlider);
-mobileLayout.addEventListener('change', updateVideoSegment);
-updateVideoSegment();
+  if (mobileLayout.matches) mobileVideoTrack.scrollTo({ left:activeVideoSlide * mobileVideoTrack.clientWidth, behavior:'auto' });
+}).observe(mobileVideoTrack);
+mobileLayout.addEventListener('change', updateComparisonLayout);
+mobileLayout.addEventListener('change', syncSummarySlotHeight);
+updateComparisonLayout();
 
 const caseSectionObserver = new IntersectionObserver(([entry]) => {
   if (entry.isIntersecting) {
@@ -244,4 +372,5 @@ caseSectionObserver.observe(caseSectionTitleReveal);
 window.addEventListener('scroll', onScroll, { passive:true });
 window.addEventListener('resize', onScroll);
 applyState('expanded');
+syncSummarySlotHeight();
 onScroll();
