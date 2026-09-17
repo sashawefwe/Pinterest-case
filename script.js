@@ -12,6 +12,21 @@ const caseSectionTitleReveal = caseSection.querySelector('.case-section__title-r
 const iphoneDemos = document.querySelectorAll('.iphone-demo');
 let manualExpanded = false;
 
+function syncSummarySlotHeight() {
+  if (!mobileLayout.matches) {
+    summarySlot.style.removeProperty('min-height');
+    return;
+  }
+
+  if (summary.dataset.state === 'expanded') {
+    // offsetHeight is not affected by the FLIP transform used during morphing.
+    summarySlot.style.minHeight = `${summary.offsetHeight}px`;
+  }
+}
+
+const summaryResizeObserver = new ResizeObserver(syncSummarySlotHeight);
+summaryResizeObserver.observe(summary);
+
 function updateIphoneScale(iphoneDemo) {
   iphoneDemo.style.setProperty('--iphone-scale', String(iphoneDemo.clientWidth / 449));
 }
@@ -100,9 +115,14 @@ function applyState(state) {
   collapseButton.setAttribute('aria-hidden', String(!overlay));
   widgetButton.tabIndex = compact ? 0 : -1;
   widgetButton.setAttribute('aria-hidden', String(!compact));
+  if (state === 'expanded') requestAnimationFrame(syncSummarySlotHeight);
 }
 
 function setState(state, morph = false) {
+  if (summary.dataset.state === 'expanded' && state !== 'expanded') {
+    syncSummarySlotHeight();
+  }
+
   if (!morph || summary.dataset.state === state || window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
     applyState(state);
     return;
@@ -224,6 +244,7 @@ new ResizeObserver(() => {
   updateVideoSegment();
 }).observe(videoSlider);
 mobileLayout.addEventListener('change', updateVideoSegment);
+mobileLayout.addEventListener('change', syncSummarySlotHeight);
 updateVideoSegment();
 
 const caseSectionObserver = new IntersectionObserver(([entry]) => {
@@ -244,4 +265,5 @@ caseSectionObserver.observe(caseSectionTitleReveal);
 window.addEventListener('scroll', onScroll, { passive:true });
 window.addEventListener('resize', onScroll);
 applyState('expanded');
+syncSummarySlotHeight();
 onScroll();
