@@ -1,0 +1,130 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Summary — UX/UI кейс</title>
+  <meta name="description" content="Интерактивный summary-компонент UX/UI кейса">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <main class="page">
+    <div class="hero">
+      <div class="summary-slot">
+      <section class="summary" data-state="expanded" aria-label="Краткое содержание кейса">
+      <button class="summary__collapse" type="button" aria-label="Свернуть карточку">
+        <img src="assets/icons/summary/collapse.svg" alt="" aria-hidden="true">
+      </button>
+      <div class="summary__content">
+        <header class="summary__intro">
+          <h1>
+            <span>Навела порядок в Pinterest</span>
+            <img class="summary__brand-icon" src="assets/cases/pinterest/images/pinterest-icon.png" alt="" aria-hidden="true">
+          </h1>
+          <p class="summary__subtitle">Упростила сохранение, удаление и перенос пинов в коллекции</p>
+        </header>
+        <div class="summary__details">
+        <div class="summary__item summary__item--problem">
+          <h2>Проблема</h2>
+          <p>Вместо вдохновления и поиска идей, приходится отвлекаться,<br> искать нужные действия и разбираться, что произошло<br>
+Я пересобрала три сценария: сохранение, удаление и перенос пинов</p>
+        </div>
+        <div class="summary__item summary__item--task">
+          <h2>Задача</h2>
+          <div class="summary__task-columns">
+            <div class="summary__task-column">
+              <h3>миссия</h3>
+              <p>Меньше разбираться в Pinterest, больше думать о своих идеях</p>
+            </div>
+            <div class="summary__task-column">
+              <h3>цель</h3>
+              <p>Больше возвращений к доскам<br> и работы с сохранёнными идеями</p>
+            </div>
+          </div>
+        </div>
+        <div class="summary__item">
+          <div class="summary__heading-row">
+            <h2>Результат</h2>
+            <span class="summary__tooltip">
+              <button class="summary__tooltip-button" type="button" aria-label="Подробнее о результатах" aria-describedby="result-tooltip" aria-expanded="false">
+                <img src="assets/icons/summary/info.svg" alt="" aria-hidden="true">
+              </button>
+              <span class="summary__tooltip-content" id="result-tooltip" role="tooltip">Проект учебный, поэтому после запуска я проверяла бы эти изменения на продуктовых метриках</span>
+            </span>
+          </div>
+          <ul class="summary__results">
+            <li>Пользователи чаще сохраняют пины прямо из ленты</li>
+            <li>Быстрее находят и удаляют ненужные пины</li>
+            <li>Быстрее находят и чаще используют мультиселект</li>
+          </ul>
+        </div>
+        </div>
+      </div>
+      <button class="summary__widget" type="button" aria-label="Раскрыть краткое содержание кейса">
+        <span class="summary__widget-label">О кейсе</span>
+        <img src="assets/icons/summary/expand.svg" alt="" aria-hidden="true">
+      </button>
+      </section>
+      </div>
+      <figure class="case-cover">
+        <img src="assets/cases/pinterest/images/cover.png" alt="Обложка кейса с интерфейсом мобильного браузера">
+      </figure>
+    </div>
+    <section class="case-section" aria-labelledby="saving-pin-title">
+      <div class="case-section__title-reveal">
+        <h2 id="saving-pin-title">Когда хочется сохранить пин,<br>не выбирая доску прямо сейчас</h2>
+      </div>
+      <div class="pin-save-videos">
+<div class="pin-save-video-test pin-save-video-test--before">
+        <div class="pin-save-comparison__text pin-save-video-test__text">
+          <h3>До</h3>
+          <p>Хочется просто листать ленту и сохранять то, что цепляет. Но каждый раз приходится выбирать доску или создавать новую</p>
+        </div>
+        <div class="pin-save-video-test__media">
+        <video autoplay muted loop playsinline>
+          <source src="assets/cases/pinterest/videos/8.webm" type="video/webm">
+        </video>
+          <div class="video-controls">
+          <button class="video-progress" type="button" aria-label="Поставить видео на паузу" data-state="playing">
+            <svg class="video-progress__ring" width="44" height="44" viewBox="0 0 44 44" fill="none" aria-hidden="true">
+              <circle cx="22" cy="22" r="21" stroke="#DDDDDD" stroke-width="2"/>
+              <circle class="video-progress__arc" cx="22" cy="22" r="21" stroke="#969696" stroke-width="2" stroke-linecap="round" pathLength="1" stroke-dasharray="1" stroke-dashoffset="1" transform="rotate(-90 22 22)"/>
+            </svg>
+            <img class="video-progress__icon" src="assets/icons/video/pause.svg" width="20" height="20" alt="" aria-hidden="true">
+          </button>
+          <button class="video-replay" type="button" aria-label="Воспроизвести видео заново">Replay</button>
+          </div>
+        </div>
+      </div>
+<div class="pin-save-video-test pin-save-video-test--after">
+        <div class="pin-save-comparison__text pin-save-video-test__text">
+          <h3>После</h3>
+          <p>Теперь пин можно сохранить одним нажатием, даже не открывая его. Выбрать доску можно позже</p>
+        </div>
+        <div class="pin-save-video-test__media">
+        <video autoplay muted loop playsinline>
+          <source src="assets/cases/pinterest/videos/7.webm" type="video/webm">
+        </video>
+          <div class="video-controls">
+          <button class="video-progress" type="button" aria-label="Поставить видео на паузу" data-state="playing">
+            <svg class="video-progress__ring" width="44" height="44" viewBox="0 0 44 44" fill="none" aria-hidden="true">
+              <circle cx="22" cy="22" r="21" stroke="#DDDDDD" stroke-width="2"/>
+              <circle class="video-progress__arc" cx="22" cy="22" r="21" stroke="#969696" stroke-width="2" stroke-linecap="round" pathLength="1" stroke-dasharray="1" stroke-dashoffset="1" transform="rotate(-90 22 22)"/>
+            </svg>
+            <img class="video-progress__icon" src="assets/icons/video/pause.svg" width="20" height="20" alt="" aria-hidden="true">
+          </button>
+          <button class="video-replay" type="button" aria-label="Воспроизвести видео заново">Replay</button>
+          </div>
+        </div>
+      </div>
+      </div>
+      <div class="video-segment" role="group" aria-label="Сравнение до и после">
+        <button type="button" data-slide="0" aria-pressed="true">До</button>
+        <button type="button" data-slide="1" aria-pressed="false">После</button>
+      </div>
+    </section>
+  </main>
+  <div class="summary-backdrop" aria-hidden="true"></div>
+  <script src="script.js"></script>
+</body>
+</html>
