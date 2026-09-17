@@ -112,7 +112,7 @@ body.summary-overlay-open .summary-backdrop { opacity:1; visibility:visible; poi
   .case-cover { order:1; width:100%; height:clamp(360px,64svh,560px); }
   .case-section { padding:clamp(240px,35vh,360px) 0 clamp(64px,10vh,100px); }
   .case-section h2 { font-size:clamp(38px,7.4vw,54px); }
-  #saving-pin-title { font-size:clamp(32.49px,6.3175vw,46.0275px); }
+  #saving-pin-title { font-size:clamp(20px,6vw,46px); white-space:nowrap; }
   .pin-save-demo { margin-top:32px; padding:clamp(24px,6vw,40px); }
   .pin-save-demo { grid-template-columns:1fr; gap:48px; }
   .pin-save-comparison { grid-template-columns:1fr; justify-items:center; }
