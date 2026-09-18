@@ -344,6 +344,23 @@ const caseSectionObserver = new IntersectionObserver(([entry]) => {
 
 caseSectionObserver.observe(caseSectionTitleReveal);
 
+const savingPinTitle = document.querySelector('#saving-pin-title');
+function fitMobileTitle() {
+  savingPinTitle.style.removeProperty('--mobile-title-size');
+  if (!mobileLayout.matches) return;
+  const fontSize = parseFloat(getComputedStyle(savingPinTitle).fontSize);
+  const widestLine = Math.max(...[...savingPinTitle.querySelectorAll('span')]
+    .map((line) => line.getBoundingClientRect().width));
+  const availableWidth = savingPinTitle.clientWidth - 2;
+  if (widestLine > availableWidth) {
+    savingPinTitle.style.setProperty('--mobile-title-size', `${fontSize * availableWidth / widestLine}px`);
+  }
+}
+new ResizeObserver(fitMobileTitle).observe(caseSectionTitleReveal);
+document.fonts.ready.then(fitMobileTitle);
+mobileLayout.addEventListener('change', fitMobileTitle);
+fitMobileTitle();
+
 window.addEventListener('scroll', onScroll, { passive:true });
 window.addEventListener('resize', () => {
   syncSummarySlotHeight();
