@@ -12,21 +12,6 @@ const caseSectionTitleReveal = caseSection.querySelector('.case-section__title-r
 const iphoneDemos = document.querySelectorAll('.iphone-demo');
 let manualExpanded = false;
 
-function syncSummarySlotHeight() {
-  if (!mobileLayout.matches) {
-    summarySlot.style.removeProperty('min-height');
-    return;
-  }
-
-  if (summary.dataset.state === 'expanded') {
-    // offsetHeight is not affected by the FLIP transform used during morphing.
-    summarySlot.style.minHeight = `${summary.offsetHeight}px`;
-  }
-}
-
-const summaryResizeObserver = new ResizeObserver(syncSummarySlotHeight);
-summaryResizeObserver.observe(summary);
-
 function updateIphoneScale(iphoneDemo) {
   iphoneDemo.style.setProperty('--iphone-scale', String(iphoneDemo.clientWidth / 449));
 }
@@ -48,6 +33,7 @@ const pinSaveVideoProgressIcon = pinSaveVideoProgress.querySelector('.video-prog
 let pinSaveProgressFrame;
 
 function togglePinSaveVideo() {
+  pinSaveVideoTest.dataset.userPaused = String(!pinSaveVideoTest.paused);
   if (pinSaveVideoTest.paused) {
     pinSaveVideoTest.play().catch(() => {});
   } else {
@@ -85,6 +71,7 @@ block.querySelector('.video-replay').addEventListener('click', (event) => {
     { transform:'none', color:originalColor }
   ], { duration:320, easing:'ease-out' });
   pinSaveVideoTest.currentTime = 0;
+  pinSaveVideoTest.dataset.userPaused = 'false';
   pinSaveVideoTest.play().catch(() => {});
   updatePinSaveVideoProgress();
 });
@@ -106,7 +93,23 @@ updatePinSaveVideoControl();
 if (!pinSaveVideoTest.paused) updatePinSaveVideoProgress();
 });
 
+function syncSummarySlotHeight() {
+  if (!mobileLayout.matches) {
+    summarySlot.style.minHeight = '';
+    return;
+  }
+  if (summary.dataset.state === 'expanded') {
+    // offsetHeight measures layout height, unaffected by the morph animation.
+    summarySlot.style.minHeight = `${summary.offsetHeight}px`;
+  }
+}
+
+const summaryResizeObserver = new ResizeObserver(syncSummarySlotHeight);
+summaryResizeObserver.observe(summary);
+
 function applyState(state) {
+  // Preserve the placeholder before the card leaves the document flow.
+  syncSummarySlotHeight();
   summary.dataset.state = state;
   const overlay = state === 'overlay';
   const compact = state === 'compact';
@@ -115,14 +118,13 @@ function applyState(state) {
   collapseButton.setAttribute('aria-hidden', String(!overlay));
   widgetButton.tabIndex = compact ? 0 : -1;
   widgetButton.setAttribute('aria-hidden', String(!compact));
-  if (state === 'expanded') requestAnimationFrame(syncSummarySlotHeight);
+  if (state === 'expanded') {
+    syncSummarySlotHeight();
+    requestAnimationFrame(syncSummarySlotHeight);
+  }
 }
 
 function setState(state, morph = false) {
-  if (summary.dataset.state === 'expanded' && state !== 'expanded') {
-    syncSummarySlotHeight();
-  }
-
   if (!morph || summary.dataset.state === state || window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
     applyState(state);
     return;
@@ -205,9 +207,43 @@ document.addEventListener('keydown', (event) => {
 const videoSlider = document.querySelector('.pin-save-videos');
 const videoSlides = [...videoSlider.querySelectorAll('.pin-save-video-test')];
 const videoSegmentButtons = [...document.querySelectorAll('.video-segment button')];
+const videoSegment = document.querySelector('.video-segment');
+const videoDescriptions = videoSlides.map((slide) => slide.querySelector('.pin-save-video-test__text'));
+const videoDescriptionArea = document.createElement('div');
+videoDescriptionArea.className = 'video-description-area';
+videoSegment.after(videoDescriptionArea);
+const mobileVideoCard = document.createElement('div');
+mobileVideoCard.className = 'mobile-video-card';
+videoSlider.before(mobileVideoCard);
+const sharedVideoControls = document.createElement('div');
+sharedVideoControls.className = 'shared-video-controls';
+const slideControls = videoSlides.map((slide) => slide.querySelector('.video-controls'));
+const slideVideos = videoSlides.map((slide) => slide.querySelector('video'));
 let activeVideoSlide = 0;
+let previousMobileVideo = null;
+
+function syncVideoCardLayout() {
+  if (mobileLayout.matches) {
+    mobileVideoCard.append(videoSlider, sharedVideoControls, videoDescriptionArea, videoSegment);
+  } else {
+    mobileVideoCard.before(videoSlider, videoSegment, videoDescriptionArea);
+    slideControls.forEach((controls, index) => videoSlides[index].append(controls));
+    previousMobileVideo = null;
+    slideVideos.forEach((video) => {
+      if (video.dataset.userPaused !== 'true') video.play().catch(() => {});
+    });
+  }
+  updateVideoSegment();
+}
 
 function updateVideoSegment() {
+  videoDescriptions.forEach((description, index) => {
+    if (mobileLayout.matches) {
+      if (description.parentElement !== videoDescriptionArea) videoDescriptionArea.append(description);
+    } else if (description.parentElement !== videoSlides[index]) {
+      videoSlides[index].prepend(description);
+    }
+  });
   if (mobileLayout.matches && videoSlider.clientWidth > 0) {
     activeVideoSlide = Math.max(0, Math.min(videoSlides.length - 1,
       Math.round(videoSlider.scrollLeft / videoSlider.clientWidth)));
@@ -217,7 +253,24 @@ function updateVideoSegment() {
   });
   videoSlides.forEach((slide, index) => {
     slide.inert = mobileLayout.matches && index !== activeVideoSlide;
+    videoDescriptions[index].dataset.active = String(index === activeVideoSlide);
+    videoDescriptions[index].inert = mobileLayout.matches && index !== activeVideoSlide;
+    if (mobileLayout.matches) videoDescriptions[index].setAttribute('aria-hidden', String(index !== activeVideoSlide));
+    else videoDescriptions[index].removeAttribute('aria-hidden');
   });
+  if (mobileLayout.matches) {
+    slideControls.forEach((controls, index) => {
+      const target = index === activeVideoSlide ? sharedVideoControls : videoSlides[index];
+      if (controls.parentElement !== target) target.append(controls);
+    });
+    if (previousMobileVideo !== activeVideoSlide) {
+      slideVideos.forEach((video, index) => {
+        if (index !== activeVideoSlide) video.pause();
+        else if (video.dataset.userPaused !== 'true') video.play().catch(() => {});
+      });
+      previousMobileVideo = activeVideoSlide;
+    }
+  }
 }
 
 function selectVideoSlide(index) {
@@ -239,13 +292,42 @@ videoSegmentButtons.forEach((button, index) => {
   });
 });
 videoSlider.addEventListener('scroll', updateVideoSegment, { passive:true });
+let descriptionSwipeStart = null;
+videoDescriptionArea.addEventListener('touchstart', (event) => {
+  if (!mobileLayout.matches || event.touches.length !== 1) {
+    descriptionSwipeStart = null;
+    return;
+  }
+  const touch = event.touches[0];
+  descriptionSwipeStart = { x:touch.clientX, y:touch.clientY };
+}, { passive:true });
+videoDescriptionArea.addEventListener('touchmove', (event) => {
+  if (!descriptionSwipeStart) return;
+  const touch = event.touches[0];
+  if (event.touches.length !== 1 || Math.abs(touch.clientY - descriptionSwipeStart.y) > 24) {
+    descriptionSwipeStart = null;
+  }
+}, { passive:true });
+videoDescriptionArea.addEventListener('touchend', (event) => {
+  const start = descriptionSwipeStart;
+  descriptionSwipeStart = null;
+  if (!start || !mobileLayout.matches) return;
+  const touch = event.changedTouches[0];
+  const dx = touch.clientX - start.x;
+  const dy = touch.clientY - start.y;
+  if (Math.abs(dx) < 40 || Math.abs(dx) < Math.abs(dy) * 1.5) return;
+  selectVideoSlide(Math.max(0, Math.min(videoSlides.length - 1,
+    activeVideoSlide + (dx < 0 ? 1 : -1))));
+}, { passive:true });
+videoDescriptionArea.addEventListener('touchcancel', () => {
+  descriptionSwipeStart = null;
+}, { passive:true });
 new ResizeObserver(() => {
   videoSlider.scrollTo({ left:mobileLayout.matches ? activeVideoSlide * videoSlider.clientWidth : 0, behavior:'instant' });
   updateVideoSegment();
 }).observe(videoSlider);
-mobileLayout.addEventListener('change', updateVideoSegment);
-mobileLayout.addEventListener('change', syncSummarySlotHeight);
-updateVideoSegment();
+mobileLayout.addEventListener('change', syncVideoCardLayout);
+syncVideoCardLayout();
 
 const caseSectionObserver = new IntersectionObserver(([entry]) => {
   if (entry.isIntersecting) {
@@ -263,7 +345,13 @@ const caseSectionObserver = new IntersectionObserver(([entry]) => {
 caseSectionObserver.observe(caseSectionTitleReveal);
 
 window.addEventListener('scroll', onScroll, { passive:true });
-window.addEventListener('resize', onScroll);
+window.addEventListener('resize', () => {
+  syncSummarySlotHeight();
+  onScroll();
+});
+mobileLayout.addEventListener('change', () => {
+  syncSummarySlotHeight();
+  onScroll();
+});
 applyState('expanded');
-syncSummarySlotHeight();
 onScroll();
